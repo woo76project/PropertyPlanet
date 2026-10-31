@@ -1,0 +1,12 @@
+import { canChangeUser, type AdminUser } from "@/lib/admin-users-api";
+import { Fragment, type ReactNode } from "react";
+export default function AdminUserTable({ users, locked, onSelect, onChange, onCredits, expandedId = null, details }: {
+  users: AdminUser[]; locked: boolean; onSelect: (user: AdminUser) => void; onChange: (user: AdminUser) => void;
+  onCredits: (user: AdminUser) => void; expandedId?: number | null; details?: ReactNode;
+}) {
+  if (!users.length) return <div className="property-empty"><h2>No users found.</h2><p>Try another name, email or account status.</p></div>;
+  return <div className="property-table-scroll user-table-scroll" role="region" aria-label="User accounts" tabIndex={0}><table className="property-table user-table management-records"><caption className="sr-only">User accounts</caption><thead><tr>{["Username", "Name", "Email", "Phone", "Role", "Account status", "Credits", "Actions"].map((label) => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>{users.map((user) => <Fragment key={user.id}><tr>
+    <th scope="row" className="table-property-name">{user.username || "Not set"}<span className="table-record-id">#{user.id}</span></th><td>{user.status === "Deleted" ? "Deleted account" : [user.first_name, user.last_name].filter(Boolean).join(" ") || "Not completed"}</td><td className="user-email">{user.status === "Deleted" ? "—" : user.email}</td><td className="table-phone">{user.phone || "—"}</td><td>{user.role}</td><td><span className={`user-status ${user.status.toLowerCase()}`}>{user.status}</span></td><td>{user.role === "Admin" ? "Unlimited" : user.credits.toLocaleString()}</td>
+    <td><div className="table-row-actions"><button className="button button-secondary" disabled={locked} aria-expanded={expandedId === user.id} onClick={() => onSelect(user)}>{expandedId === user.id ? "Hide details ▴" : "Details ▾"}</button>{user.role === "User" && user.status === "Active" && <button className="button button-primary" disabled={locked} onClick={() => onCredits(user)}>Assign credits</button>}{canChangeUser(user) && <button className="button button-secondary" disabled={locked} onClick={() => onChange(user)}>{user.status === "Active" ? "Suspend" : "Reactivate"}</button>}</div></td>
+  </tr>{expandedId === user.id && <tr className="user-expanded-row"><td className="user-detail-cell" colSpan={8}><div className="user-inline-details">{details}</div></td></tr>}</Fragment>)}</tbody></table></div>;
+}

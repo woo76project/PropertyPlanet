@@ -1,0 +1,24 @@
+# API and embedded import consumer. No paid worker, disk or database is provisioned.
+services:
+  - type: web
+    name: property-planets-v3-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: python -m pip install -r requirements.txt
+    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
+    autoDeployTrigger: "off"
+    envVars:
+      - key: IMPORT_PROCESSOR_ENABLED
+        value: "true"
+      - key: DB_URL
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: WHATSAPP_NUMBER
+        sync: false
+      - key: CREDIT_PRICE_MYR
+        value: "1.00"
