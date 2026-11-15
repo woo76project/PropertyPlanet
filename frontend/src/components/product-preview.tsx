@@ -42,7 +42,7 @@ export default function ProductPreview() {
           {rows.map((item) => <div className="sample-row" key={item.id}><span className={`building-tile tile-${item.id}`} aria-hidden="true">▥</span><div><h3>{item.name}</h3><p>{item.area}</p></div><span className="sample-chevron" aria-hidden="true">↗</span></div>)}
           {!rows.length && <p className="sample-empty">No sample properties match. Try another location.</p>}
         </div>
-        <div className="contact-lock"><span className="lock-icon" aria-hidden="true">↗</span><div><strong>Make the next connection.</strong><p>Owner details and remarks unlock with search credits.</p></div><span className="lock-pill">Paid access</span></div>
+        <div className="contact-lock"><span className="lock-icon" aria-hidden="true">↗</span><div><strong>Make the next connection.</strong><p>Contact details, IC numbers and remarks unlock with search credits.</p></div><span className="lock-pill">Paid access</span></div>
       </div>
     </div>
     <div className="floating-note"><span aria-hidden="true">✦</span><div><strong>Less searching. More connecting.</strong><small>Built around the way agents work.</small></div></div>
