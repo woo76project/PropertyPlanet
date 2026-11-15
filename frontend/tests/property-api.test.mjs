@@ -64,7 +64,7 @@ test("free users request only previews and private fields are excluded from resu
   const result = await loadPropertyPage("sample-token", query, signal);
   assert.equal(result.mode, "free");
   assert.deepEqual(calls.map(({ url }) => url.pathname), ["/auth/me", "/credits", "/properties/preview"]);
-  assert.deepEqual(Object.keys(result.page.properties[0]), ["id", "address"]);
+  assert.deepEqual(result.page.properties[0], { id: row.id, address: row.address, owner_name: row.owner_name });
   for (const { options } of calls) {
     assert.equal(options.headers.Authorization, "Bearer sample-token");
     assert.equal(options.credentials, "omit");
@@ -91,7 +91,7 @@ test("search text, page size and cursor are encoded as query parameters", async 
   const result = await loadPropertyPage("sample-token", { search: "  Condo & 50%_!  ", limit: 50, beforeId: 10 });
   assert.equal(result.mode, "free");
   assert.equal(result.charged, false);
-  assert.equal(result.page.properties[0].owner_name, undefined);
+  assert.equal(result.page.properties[0].owner_name, row.owner_name);
   assert.equal(calls[2].url.pathname, "/properties/preview");
   assert.ok(calls.every(({ options }) => options.method === "GET"));
   assert.equal(calls[2].url.searchParams.get("search"), "Condo & 50%_!");
