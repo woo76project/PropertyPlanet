@@ -105,7 +105,7 @@ def preview_properties(
     limit: int = Query(default=20, ge=1, le=100),
     user: dict = Depends(require_preview_search),
 ):
-    # Query only preview fields. Never fetch owner/contact/IC data for free access.
+    # Free previews expose owner name and address, never contact/IC/remark data.
     # Apply before LIMIT so blank addresses cannot fill or shorten preview pages.
     conditions = ["address IS NOT NULL", "BTRIM(address) <> ''", "LOWER(BTRIM(address)) <> 'nil'"]
     values = []
@@ -121,7 +121,7 @@ def preview_properties(
         conditions.append("id < %s")
         values.append(before_id)
     where = " WHERE " + " AND ".join(conditions) if conditions else ""
-    query = ("SELECT id, address FROM properties"
+    query = ("SELECT id, owner_name, address FROM properties"
              + where + " ORDER BY id DESC LIMIT %s")
     settings = get_settings()
     with psycopg.connect(
@@ -130,7 +130,7 @@ def preview_properties(
         rows = connection.execute(query, (*values, limit + 1)).fetchall()
     has_more = len(rows) > limit
     # Explicit allowlist also prevents future SELECT changes leaking private fields.
-    fields = ("id", "address")
+    fields = ("id", "owner_name", "address")
     results = [{field: row[field] for field in fields} for row in rows[:limit]]
     return {
         "properties": results,
