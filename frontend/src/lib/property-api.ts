@@ -71,11 +71,12 @@ function readPage(data: unknown, fullAccess: boolean): PropertyPage {
   }
   const properties = rows.map((row) => {
     if (!row || !Number.isSafeInteger(row.id) || row.id < 1
+      || typeof row.owner_name !== "string"
       || (row.address !== null && typeof row.address !== "string")) {
       throw new Error("The property service returned an invalid property.");
     }
     const record: PropertyRecord = {
-      id: row.id, address: row.address,
+      id: row.id, address: row.address, owner_name: row.owner_name,
     };
     if (fullAccess) {
       if (typeof row.owner_name !== "string" || typeof row.phone_01 !== "string"
