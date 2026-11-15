@@ -15,7 +15,7 @@ message; the user sends it and payment is handled manually.
 
 ## Features
 
-- Public property previews; credits unlock owner and contact details.
+- Free property previews show owner names and addresses; credits unlock phone numbers, IC numbers and remarks. Owner-name searches still require credits.
 - One credit per new search with matches. Empty results and failures are free.
 - Pagination and request retries are included. Refresh, closing the tab or signing
   out clears the active search. Admin searches are free.
