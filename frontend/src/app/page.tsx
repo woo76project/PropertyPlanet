@@ -54,6 +54,6 @@ export default async function Home() {
 
       <section className="closing-section section-shell"><div className="closing-orbit" aria-hidden="true"/><span className="eyebrow">THERE’S A WORLD OF POSSIBILITY.</span><h2>Find your next<br/><span>connection.</span></h2><p>Start exploring. See where it takes you.</p><JoinButton>Get started free <span aria-hidden="true">↗</span></JoinButton></section>
     </main>
-    <footer className="site-footer section-shell"><Brand/><p>Built for your next move.</p><span>© {new Date().getFullYear()} Property Planets</span></footer>
+    <footer className="site-footer section-shell"><Brand/><p>Built for your next move.</p><Link className="privacy-footer-link" href="/privacy">Privacy policy</Link><span>© {new Date().getFullYear()} Property Planets</span></footer>
   </>;
 }
