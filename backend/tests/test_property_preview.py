@@ -30,19 +30,20 @@ class PropertyPreviewTests(unittest.TestCase):
             execute = connect.return_value.__enter__.return_value.execute
             execute.return_value.fetchall.return_value = [
                 {"id": 9, "address": "KL",
-                 "owner_name": "Private", "phone_01": "secret", "ic_number": "secret", "remark": "secret"},
-                {"id": 8, "address": None},
+                 "owner_name": "Sample owner", "phone_01": "secret", "phone_02": "secret", "ic_number": "secret", "remark": "secret"},
+                {"id": 8, "owner_name": "Another owner", "address": None},
             ]
             response = TestClient(app).get("/properties/preview", params={
                 "search": " abc!%_ ", "before_id": 10, "limit": 1,
             })
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.json(), {
-                "properties": [{"id": 9, "address": "KL"}],
+                "properties": [{"id": 9, "owner_name": "Sample owner", "address": "KL"}],
                 "pagination": {"limit": 1, "has_more": True, "next_before_id": 9},
             })
             query, values = execute.call_args.args
-            for field in ("owner_name", "phone_01", "phone_02", "ic_number", "remark", "created_by", "updated_by"):
+            self.assertIn("SELECT id, owner_name, address FROM properties", query)
+            for field in ("phone_01", "phone_02", "ic_number", "remark", "created_by", "updated_by"):
                 self.assertNotIn(field, query)
                 self.assertNotIn(field, response.text)
             self.assertEqual(values, ("%abc!!!%!_%", 10, 2))
