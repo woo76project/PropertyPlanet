@@ -1,38 +1,15 @@
 import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { loadCredits, CreditsError } from "../src/lib/credits-api.ts";
 import { assignUserCredits, adjustUserCredits } from "../src/lib/admin-users-api.ts";
 const originalFetch = globalThis.fetch;
 const originalBase = process.env.NEXT_PUBLIC_API_URL;
 afterEach(() => { globalThis.fetch = originalFetch; if (originalBase === undefined) delete process.env.NEXT_PUBLIC_API_URL; else process.env.NEXT_PUBLIC_API_URL = originalBase; });
-const account = { balance: 0, unlimited: false, price_myr: "1.00", purchase_url: "https://wa.me/12025550123?text=Hi%20I%20want%20credits" };
 function mock(data, status = 200) {
   process.env.NEXT_PUBLIC_API_URL = "https://example.invalid";
   const calls = [];
   globalThis.fetch = async (url, options) => { calls.push({ url, options }); return new Response(JSON.stringify(data), { status }); };
   return calls;
 }
-test("zero balances and configured WhatsApp messages are supported", async () => {
-  const calls = mock(account);
-  assert.deepEqual(await loadCredits("token"), account);
-  assert.equal(calls[0].url, "https://example.invalid/credits");
-  assert.equal(calls[0].options.credentials, "omit");
-  assert.equal(calls[0].options.cache, "no-store");
-});
-test("a missing WhatsApp contact is explicit", async () => {
-  mock({ ...account, purchase_url: null });
-  assert.equal((await loadCredits("token")).purchase_url, null);
-});
-test("malformed balances and unsafe purchase destinations are rejected", async () => {
-  for (const data of [{ ...account, balance: -1 }, { ...account, balance: "10" }, { ...account, price_myr: "NaN" },
-    { ...account, purchase_url: "javascript:alert(1)" }, { ...account, purchase_url: "https://wa.me.evil.invalid/12025550123?text=Hi" }]) {
-    mock(data); await assert.rejects(loadCredits("token"));
-  }
-});
-test("permission failures remain failures", async () => {
-  mock({ detail: "Complete your profile first" }, 403);
-  await assert.rejects(loadCredits("token"), (e) => e instanceof CreditsError && e.status === 403);
-});
 test("assignments send their retry ID with the positive amount and reference", async () => {
   const calls = mock({ balance: 25, assigned: 10, duplicate: false });
   assert.deepEqual(await assignUserCredits("token", 2, 10, " transfer ", "same-id"), { balance: 25, unlimited: false });

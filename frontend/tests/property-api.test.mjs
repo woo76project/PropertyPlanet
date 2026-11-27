@@ -14,22 +14,39 @@ const row = { id: 5, address: "Sample address", owner_name: "Sample owner", phon
 const page = { properties: [row], pagination: { limit: 20, has_more: false, next_before_id: null } };
 const query = { search: "", limit: 20, beforeId: null };
 
-test("normal and every builder operator reject trimmed clues below three characters before sending requests", async () => {
+test("blank clues are invalid and every builder operator accepts one character", async () => {
   let calls = 0;
   globalThis.fetch = () => { calls++; throw new Error("Must not send invalid clues"); };
-  for (const value of ["w", "ab", " ab "]) {
-    await assert.rejects(loadPropertyPage("token", { ...query, search: value }), (e) => e.status === 422);
+  for (const value of ["", " ", "  "]) {
+    assert.ok(searchClueError(value));
     for (const operator of ["equals", "starts_with", "contains", "ends_with"]) {
-      assert.ok(searchClueError(value, operator));
+      assert.ok(searchClueError(value));
       await assert.rejects(loadPropertyPage("token", { ...query, builder: { match: "all", conditions: [{ field: "address", operator, value }] } }), (e) => e.status === 422);
     }
   }
   assert.equal(calls, 0);
   assert.equal(searchClueError(" 吉隆坡 "), null);
   assert.equal(searchClueError("ABC%_!"), null);
-  assert.ok(searchClueError("%%%"));
-  assert.ok(searchClueError("a b c"));
+  assert.equal(searchClueError("%%%"), null);
+  assert.equal(searchClueError("a b c"), null);
+  for (const value of ["w", "Ng", " 吉 ", "%", "_"]) assert.equal(searchClueError(value), null);
 });
+test("builder accepts five names plus five addresses and rejects a sixth in either category", async () => {
+  const conditions = ["owner_name", "address"].flatMap((field) => Array.from({ length: 5 }, () => ({ field, operator: "contains", value: "A" })));
+  for (const match of ["all", "any"]) {
+    const calls = mockResponses([profile, { balance: 1, unlimited: false }, { ...page, properties: [], balance: 0, charged: true }]);
+    await loadPropertyPage("token", { ...query, searchId: "query-id", builder: { match, conditions } });
+    assert.equal(JSON.parse(calls[2].options.body).filters.conditions.length, 10);
+    for (const field of ["owner_name", "address"]) {
+      let requests = 0;
+      globalThis.fetch = () => { requests++; throw new Error("Invalid builder must not reach API"); };
+      await assert.rejects(loadPropertyPage("token", { ...query, builder: { match, conditions: Array.from({ length: 6 }, () => ({ field, operator: "contains", value: "A" })) } }), (error) => error.status === 422);
+      await assert.rejects(loadPropertyPage("token", { ...query, builder: { match, conditions: [...conditions, conditions[0]] } }), (error) => error.status === 422);
+      assert.equal(requests, 0);
+    }
+  }
+});
+
 test("total properties uses the authenticated summary endpoint without page filters", async () => {
   const calls = mockResponses([{ total: 500123 }]);
   assert.equal(await loadPropertyTotal("admin-token"), 500123);
@@ -124,11 +141,21 @@ test("free previews support public builder fields", async () => {
   assert.deepEqual(JSON.parse(calls[2].url.searchParams.get("filters")), builder);
 });
 
-test("owner clues never reach free preview endpoints", async () => {
-  const calls = mockResponses([profile, { balance: 0, unlimited: false }]);
-  const builder = { match: "all", conditions: [{ field: "owner_name", operator: "equals", value: "Tan" }] };
-  await assert.rejects(loadPropertyPage("token", { ...query, builder }), /Use a search credit/);
-  assert.equal(calls.length, 2);
+test("free users can search names and addresses with AND or OR without a credit charge", async () => {
+  for (const match of ["all", "any"]) {
+    const calls = mockResponses([profile, { balance: 0, unlimited: false }, page]);
+    const builder = { match, conditions: [
+      { field: "owner_name", operator: "contains", value: "A" },
+      { field: "address", operator: "contains", value: "B" },
+    ] };
+    const result = await loadPropertyPage("token", { ...query, builder });
+    assert.equal(result.mode, "free");
+    assert.equal(result.charged, false);
+    assert.equal(calls[2].url.pathname, "/properties/preview");
+    assert.deepEqual(JSON.parse(calls[2].url.searchParams.get("filters")), builder);
+    assert.deepEqual(result.page.properties, [{ id: 5, owner_name: "Sample owner", address: "Sample address" }]);
+    assert.equal(calls.some((call) => call.url.pathname === "/properties/search"), false);
+  }
 });
 
 test("suspended accounts stop before billing or property requests", async () => {
