@@ -177,5 +177,5 @@ CREATE INDEX IF NOT EXISTS properties_ic_number_trgm ON properties USING GIN (ic
 CREATE INDEX IF NOT EXISTS properties_remark_trgm ON properties USING GIN (remark gin_trgm_ops);
 
 -- Builder equality/prefix queries use GIN-compatible candidates with a
--- case-insensitive recheck. No extra prefix indexes; all clues require 3+ chars.
+-- case-insensitive recheck. No extra prefix indexes; all clues require 1+ chars.
 ANALYZE properties;
