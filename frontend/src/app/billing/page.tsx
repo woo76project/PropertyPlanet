@@ -1,2 +1,2 @@
 import { redirect } from "next/navigation";
-export default function PreviousBillingPage() { redirect("/credits"); }
+export default function PreviousBillingPage() { redirect("/properties"); }
