@@ -1,7 +1,7 @@
 # V3 search builder
 
-Property browsing and Admin property management support up to six conditions total,
-with at most three per category, on
+Property browsing and Admin property management support up to ten conditions total,
+with at most five per category, on
 name and address. Choose **all** (AND) or **any** (OR).
 Conditions support contains, starts with, ends with and equals; matching ignores
 letter case. This is literal fragment matching, not typo correction or semantic AI
@@ -10,9 +10,9 @@ in any order. Example: address contains `Damansara` AND name starts with `Tan`.
 
 The builder replaces quick search when applied. Page size remains
 active; changes reset the pagination cursor. Quick search replaces the active
-builder. Free previews can filter address only. The preview API rejects
-owner filters, including OR combinations, rather than revealing private owners
-through the existence of matching rows. Full searches use the credit-protected
+builder. Free users can filter names and addresses in the builder, including AND/OR
+combinations. Preview responses still expose only names and addresses.
+Free quick search remains address-only. Full searches use the credit-protected
 POST /properties/search endpoint. Admin retains direct full-record access.
 The current rule is one credit for a successful search with matching rows; empty results cost zero and
 all pages of the same query are included. No 50/100-record cap has been applied.
@@ -35,12 +35,10 @@ Search Builder and public address previews share the name/address indexes.
 There is no combined-text expression index or extra stored search column.
 Indexes consume disk and slow inserts/imports; measure that tradeoff with V3 data.
 
-Contains/ends-with require a run of at least three letters/digits, enforced by the
-API and UI. Tiny unanchored fragments provide little useful trigram information.
-Every operator also requires at least three trimmed characters. Short values
-such as `Ng` and `KL` are rejected, including starts with and equals. Values such as
-`%` and `_` are escaped, not accepted as user-supplied SQL wildcards. Even indexed
-queries can be slow when matching much of the table, particularly any/OR searches.
+All operators and normal search accept at least one trimmed character. `%` and
+`_` remain literal text, escaped by the API. One- and two-character contains
+queries may provide no useful trigrams and can scan many rows; pagination and
+rate limits remain enabled. The builder allows five names and five addresses.
 
 ## Database setup
 
@@ -56,7 +54,7 @@ search-index migration for a fresh database. Existing V3 databases instead run
 `python -m scripts.run_sql sql/04_drop_search_prefix_indexes.sql` after deploying
 the matching GIN-compatible builder backend. It removes only the two extra
 prefix indexes; records, six GIN indexes and duplicate prevention are preserved.
-Do not rerun the superseded 02/03 scripts. The three-character validation remains.
+Do not rerun the superseded 02/03 scripts. The one-character validation remains.
 Do not rerun the complete schema on an existing database. The schema enables `pg_trgm` and `pgcrypto`, creates the
 final tables with their constraints and indexes, and refreshes search statistics.
 It does not reset existing data or create any accounts.
