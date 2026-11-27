@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Show } from "@clerk/nextjs";
 import AuthActions from "@/components/auth-actions";
 import AdminNavLink from "@/components/admin-nav-link";
@@ -12,7 +11,6 @@ export default function SiteHeader() {
     <div className="site-header-inner">
       <Brand />
       <nav className="nav-links" aria-label="Main navigation">
-        <Show when="signed-out"><Link href="/#features">Why Property Planets</Link><Link href="/#how-it-works">How it works</Link><Link href="/#membership">Search credits</Link></Show>
         <Show when="signed-in"><HeaderNavLink href="/properties">Properties</HeaderNavLink><HeaderNavLink href="/account">My account</HeaderNavLink><AdminNavLink /></Show>
       </nav>
       <AuthActions />

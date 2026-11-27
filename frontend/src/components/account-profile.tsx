@@ -73,13 +73,10 @@ function SignedInProfile() {
       <p className="profile-intro">{complete ? "Your profile is ready. You can review and update your details here." : "Complete your profile before exploring property records. Your email is already linked to your sign-in account."}</p>
       <div className="account-email"><span>Email address</span><strong>{profile.email}</strong></div>
       {saved && <p className="form-success" role="status">Your profile has been saved.</p>}
-      {complete && <div className="billing-actions account-browse"><Link className="button button-primary" href="/properties">Browse properties <span aria-hidden="true">↗</span></Link>{profile.role !== "Admin" && <Link className="button button-secondary" href="/credits">Search credits</Link>}</div>}
+      {complete && <div className="billing-actions account-browse"><Link className="button button-primary" href="/properties">Browse properties <span aria-hidden="true">↗</span></Link></div>}
       {!complete || editing ? <ProfileForm key={profile.username ?? "new"} profile={profile} saving={saving} error={saveError} onSave={saveProfile} onCancel={complete ? () => { setEditing(false); setSaveError(null); } : undefined} />
         : <><dl className="profile-summary"><div><dt>Username</dt><dd>{profile.username}</dd></div><div><dt>Name</dt><dd>{profile.first_name} {profile.last_name}</dd></div><div><dt>Phone number</dt><dd>{profile.phone}</dd></div></dl><button className="button button-secondary" onClick={() => { setEditing(true); setSaved(false); }}>Edit profile</button></>}
     </section>
-    <aside className="profile-sidebar">
-      <div className="onboarding-note"><span aria-hidden="true">◈</span><h2>Your workspace, ready for you.</h2><p>Complete your profile to browse property previews. Use search credits to unlock owner contact details.</p><ol><li>Create your account <span>✓</span></li><li>Complete your profile <span>{complete ? "✓" : "02"}</span></li><li>Explore the possibilities <span>03</span></li></ol></div>
-      {complete && <PasswordSetup />}
-    </aside>
+    {complete && <aside className="profile-sidebar"><PasswordSetup /></aside>}
   </div>;
 }

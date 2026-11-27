@@ -4,9 +4,9 @@ import { useState } from "react";
 
 // Fictional examples only. No real owner/contact data is shipped with the landing page.
 const examples = [
-  { id: 1, name: "The Amber Residences", area: "Mont Kiara, Kuala Lumpur" },
-  { id: 2, name: "Parkside Suites", area: "Petaling Jaya, Selangor" },
-  { id: 3, name: "Skyline Gardens", area: "Bangsar, Kuala Lumpur" },
+  { id: 1, name: "ABC", area: "Address A" },
+  { id: 2, name: "DEF", area: "Address B" },
+  { id: 3, name: "GHI", area: "Address C" },
 ];
 
 function Buildings() {
@@ -36,13 +36,13 @@ export default function ProductPreview() {
       <div className="preview-topbar"><span className="preview-app-icon" aria-hidden="true">◈</span><span>Property explorer</span><span className="demo-label">Interactive demo</span></div>
       <div className="city-header"><div><span className="tiny-label">A WORLD OF OPPORTUNITY</span><h2>Your next connection<br/>starts here.</h2></div><Buildings /></div>
       <div className="preview-content">
-        <label className="preview-search"><span aria-hidden="true">⌕</span><input aria-label="Search sample properties" placeholder="Try Mont Kiara or Bangsar…" value={search} onChange={(event) => setSearch(event.target.value)} /><kbd aria-hidden="true">⌕</kbd></label>
+        <label className="preview-search"><span aria-hidden="true">⌕</span><input aria-label="Search sample properties" placeholder="Try ABC or DEF…" value={search} onChange={(event) => setSearch(event.target.value)} /><kbd aria-hidden="true">⌕</kbd></label>
         <div className="preview-filter-row"><span>Property address previews</span><span>{rows.length} {rows.length === 1 ? "result" : "results"}</span></div>
         <div className="sample-list" aria-live="polite">
           {rows.map((item) => <div className="sample-row" key={item.id}><span className={`building-tile tile-${item.id}`} aria-hidden="true">▥</span><div><h3>{item.name}</h3><p>{item.area}</p></div><span className="sample-chevron" aria-hidden="true">↗</span></div>)}
-          {!rows.length && <p className="sample-empty">No sample properties match. Try another location.</p>}
+          {!rows.length && <p className="sample-empty">No sample properties match. Try ABC, DEF or GHI.</p>}
         </div>
-        <div className="contact-lock"><span className="lock-icon" aria-hidden="true">↗</span><div><strong>Make the next connection.</strong><p>Contact details, IC numbers and remarks unlock with search credits.</p></div><span className="lock-pill">Paid access</span></div>
+        <div className="contact-lock"><span className="lock-icon" aria-hidden="true">↗</span><div><strong>Make the next connection.</strong></div><span className="lock-pill">Full details</span></div>
       </div>
     </div>
     <div className="floating-note"><span aria-hidden="true">✦</span><div><strong>Less searching. More connecting.</strong><small>Built around the way agents work.</small></div></div>

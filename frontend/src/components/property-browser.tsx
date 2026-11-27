@@ -36,7 +36,6 @@ function SignedInBrowser({ adminMode }: { adminMode: boolean }) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [showCreditNotice, setShowCreditNotice] = useState(false);
   const mutation = useRef<AbortController | null>(null);
   const editorPanel = useRef<HTMLDivElement>(null);
 
@@ -132,7 +131,6 @@ function SignedInBrowser({ adminMode }: { adminMode: boolean }) {
     setResult(null); setFilters(next);
   }
   function startSearch(next: Filters) {
-    setShowCreditNotice(!adminMode && !unlimited && balance === 0);
     updateFilters({ ...next, cursors: [null], searchId: !unlimited && (balance ?? 0) > 0 && (next.search.trim() || next.builder) ? crypto.randomUUID() : null });
   }
   function submitSearch(event: FormEvent<HTMLFormElement>) {
@@ -156,17 +154,16 @@ function SignedInBrowser({ adminMode }: { adminMode: boolean }) {
     {data?.mode === "admin" && adminMode && <div className="admin-property-toolbar"><div><span className="eyebrow">PROPERTY MANAGEMENT</span><div className="admin-property-total">Total properties <strong>{totalError ? "Unavailable" : totalProperties === null ? "…" : totalProperties.toLocaleString("en-MY")}</strong></div><p>{totalError ? "Refresh to reload the total count. " : ""}Use the actions in each row to edit or delete a record.</p></div><button className="button button-primary" disabled={!!editor} onClick={() => openEditor("edit", null)}>+ Add property</button></div>}
     {notice && <p className="form-success" role="status">{notice}</p>}
     {adminMode && editor && data?.mode === "admin" && <div className="property-editor-anchor" ref={editorPanel}>{editor.kind === "edit" ? <PropertyForm key={editor.property?.id ?? "new"} property={editor.property} busy={saving} error={saveError} onSave={(details) => { void changeProperty(details); }} onCancel={() => { setEditor(null); setSaveError(null); }} /> : <section className="property-editor property-delete" aria-labelledby="delete-property-title"><span className="eyebrow">DELETE RECORD #{editor.property?.id}</span><h2 id="delete-property-title">Delete this property?</h2><p><strong>{editor.property?.owner_name}</strong></p><p>{editor.property?.address || "Address not provided"}</p><p>This permanently removes the record. It cannot be undone.</p>{saveError && <p className="form-error" role="alert">{saveError}</p>}<div className="billing-actions"><button className="button button-danger" disabled={saving} onClick={() => { void changeProperty(); }}>{saving ? "Deleting…" : "Confirm delete"}</button><button className="button button-secondary" disabled={saving} onClick={() => { setEditor(null); setSaveError(null); }}>Cancel</button></div></section>}</div>}
-    <SearchBuilder key={builderReset} disabled={!!editor} ownerAllowed={unlimited || (balance ?? 0) > 0 || data?.mode === "credit"} onApply={(builder) => { setSearch(""); startSearch({ ...filters, search: "", builder }); }} />
+    <SearchBuilder key={builderReset} disabled={!!editor} onApply={(builder) => { setSearch(""); startSearch({ ...filters, search: "", builder }); }} />
     <form className="property-filters" onSubmit={submitSearch} aria-label="Property search">
-      <div className="property-search-field"><label htmlFor="property-search">Search properties (at least 3 characters)</label><div><span aria-hidden="true">⌕</span><input disabled={!!editor} id="property-search" value={search} minLength={3} maxLength={200} required onChange={(event) => setSearch(event.target.value)} placeholder={data && data.mode !== "free" ? "Name, address, phone, IC or remark…" : "Property address…"} /></div></div>
+      <div className="property-search-field"><label htmlFor="property-search">Search properties (at least 1 character)</label><div><span aria-hidden="true">⌕</span><input disabled={!!editor} id="property-search" value={search} minLength={1} maxLength={200} required onChange={(event) => setSearch(event.target.value)} placeholder={data && data.mode !== "free" ? "Name, address, phone, IC or remark…" : "Property address…"} /></div></div>
       <div><label htmlFor="page-size">Per page</label><select disabled={!!editor} id="page-size" value={filters.limit} onChange={(event) => updateFilters({ ...filters, limit: Number(event.target.value), cursors: [null] })}>{[20, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}</select></div>
       <button disabled={!!editor || searchClueError(search) !== null} type="submit" className="button button-primary">Search <span aria-hidden="true">↗</span></button>
     </form>
     {search.trim() && searchClueError(search) && <p className="form-error" role="status">{searchClueError(search)}</p>}
-    {showCreditNotice && !adminMode && !unlimited && balance === 0 && <p className="credit-search-notice" role="status">You have no search credits left. You can still search free previews. <Link href="/credits">Buy credits</Link> to unlock full details.</p>}
     {(filters.search || filters.builder || filters.limit !== 20) && <div className="active-property-filters"><span>{filters.builder ? `Builder: match ${filters.builder.match} of ${filters.builder.conditions.length} conditions` : filters.search ? `Search: “${filters.search}”` : "Filtered properties"}</span><button disabled={!!editor} onClick={() => { setSearch(""); setBuilderReset((value) => value + 1); updateFilters(initialFilters); }}>Clear filters</button></div>}
     {!result && <div className="property-state" role="status"><span className="property-loading-dot"/> Loading properties…</div>}
-    {error && <section className="property-state"><h2>{needsProfile ? "One more step before exploring." : "We could not load your properties."}</h2><p role="alert">{error.error}</p>{needsProfile ? <Link className="button button-primary" href="/account">Complete your profile <span aria-hidden="true">↗</span></Link> : <><button className="button button-secondary" onClick={refresh}>Retry this search</button><Link className="button button-primary" href="/credits">Buy search credits</Link></>}</section>}
+    {error && <section className="property-state"><h2>{needsProfile ? "One more step before exploring." : "We could not load your properties."}</h2><p role="alert">{error.error}</p>{needsProfile ? <Link className="button button-primary" href="/account">Complete your profile <span aria-hidden="true">↗</span></Link> : <><button className="button button-secondary" onClick={refresh}>Retry this search</button></>}</section>}
     {data && <>
       {data.mode === "credit" && !data.page.properties.length && <p className="form-success" role="status">No credits deducted for this search.</p>}
       <div className="property-results-heading"><p>{data.page.properties.length} {data.page.properties.length === 1 ? "property" : "properties"} on this page</p><span>Page {filters.cursors.length}</span></div>

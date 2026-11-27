@@ -33,5 +33,5 @@ function CheckedAdminLink() {
     window.addEventListener("focus", check);
     return () => { controller.abort(); window.removeEventListener("focus", check); };
   }, [getToken]);
-  return role === "Admin" ? <><HeaderNavLink href="/admin/properties" alsoActive={["/admin/imports"]}>Manage properties</HeaderNavLink><HeaderNavLink href="/admin/users">User management</HeaderNavLink><HeaderNavLink href="/admin/audit">Audit history</HeaderNavLink></> : role === "User" ? <HeaderNavLink href="/credits">Search credits</HeaderNavLink> : null;
+  return role === "Admin" ? <><HeaderNavLink href="/admin/properties" alsoActive={["/admin/imports"]}>Manage properties</HeaderNavLink><HeaderNavLink href="/admin/users">User management</HeaderNavLink><HeaderNavLink href="/admin/audit">Audit history</HeaderNavLink></> : null;
 }

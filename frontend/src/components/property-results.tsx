@@ -14,7 +14,7 @@ export default function PropertyResults({ properties, mode, onEdit, onDelete, ed
   const management = mode === "admin" && !!onEdit && !!onDelete;
   if (!properties.length) return <div className="property-empty"><span aria-hidden="true">⌕</span><h2>No properties found.</h2><p>Try another name or address, or clear your filters.</p></div>;
   return <div className="property-table-container">
-    <p className="property-table-hint">{fullAccess ? "All record details are listed below. Scroll horizontally to see more columns." : "Owner names and addresses are free to view. Use a search credit to unlock contact details, IC numbers and remarks."}</p>
+    {fullAccess && <p className="property-table-hint">All record details are listed below. Scroll horizontally to see more columns.</p>}
     <div className="property-table-scroll" role="region" aria-label="Property records, scroll horizontally for more columns" tabIndex={0}>
       <table className={`property-table ${fullAccess ? "full-records" : "preview-records"} ${management ? "management-records" : ""}`}>
         <caption className="sr-only">{management ? "Manage property records" : fullAccess ? "Full property records" : "Property previews"}</caption>
