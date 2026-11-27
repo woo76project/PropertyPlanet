@@ -2,7 +2,6 @@ from contextlib import ExitStack
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
-from urllib.parse import parse_qs, urlsplit
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
@@ -18,7 +17,7 @@ class CreditTests(unittest.TestCase):
         self.stack = ExitStack()
         self.addCleanup(self.stack.close)
         self.addCleanup(app.dependency_overrides.clear)
-        self.settings = SimpleNamespace(db_url=SecretStr("unused"), whatsapp_number="12025550123", credit_price_myr="1.00")
+        self.settings = SimpleNamespace(db_url=SecretStr("unused"))
         self.stack.enter_context(patch("app.credits.get_settings", return_value=self.settings))
         self.connect = self.stack.enter_context(patch("app.credits.psycopg.connect"))
         self.execute = self.connect.return_value.__enter__.return_value.execute
@@ -28,25 +27,16 @@ class CreditTests(unittest.TestCase):
     def authorize(self, role="User"):
         app.dependency_overrides[require_complete_profile] = lambda: {"id": 1 if role == "Admin" else 2, "role": role, "username": "demo"}
 
-    def test_zero_default_and_prefilled_whatsapp_reference(self):
+    def test_zero_balance_has_no_purchase_information(self):
         self.authorize()
         self.execute.return_value.fetchone.return_value = None
         response = self.client.get("/credits")
         self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data["balance"], 0)
-        self.assertFalse(data["unlimited"])
-        url = urlsplit(data["purchase_url"])
-        self.assertEqual((url.scheme, url.netloc, url.path), ("https", "wa.me", "/12025550123"))
-        message = parse_qs(url.query)["text"][0]
-        self.assertIn("Username: demo", message)
-        self.assertNotIn("User ID", message)
+        self.assertEqual(response.json(), {"balance": 0, "unlimited": False})
 
-    def test_missing_contact_disables_purchase_and_admin_is_unlimited(self):
+    def test_admin_is_unlimited_without_database_lookup(self):
         self.authorize("Admin")
-        self.settings.whatsapp_number = None
-        self.execute.return_value.fetchone.return_value = {"balance": 0}
-        self.assertEqual(self.client.get("/credits").json(), {"balance": 0, "unlimited": True, "price_myr": "1.00", "purchase_url": None})
+        self.assertEqual(self.client.get("/credits").json(), {"balance": 0, "unlimited": True})
         self.connect.assert_not_called()
 
     def test_assign_requires_admin_before_database_access(self):

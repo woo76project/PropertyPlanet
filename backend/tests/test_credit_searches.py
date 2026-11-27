@@ -121,11 +121,11 @@ class CreditSearchTests(unittest.TestCase):
         self.assertEqual(self.client.get("/properties/1").status_code, 403)
         self.connect.assert_not_called()
 
-    def test_four_conditions_per_category_rejected_without_query_or_charge(self):
+    def test_six_conditions_per_category_rejected_without_query_or_charge(self):
         for field in ("owner_name", "address"):
             for match in ("all", "any"):
                 filters = {"match": match, "conditions": [
-                    {"field": field, "operator": "equals", "value": str(i)} for i in range(4)
+                    {"field": field, "operator": "equals", "value": str(i)} for i in range(6)
                 ]}
                 self.assertEqual(self.post(filters=filters).status_code, 422)
         self.connect.assert_not_called()
