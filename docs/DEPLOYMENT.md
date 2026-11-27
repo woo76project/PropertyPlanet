@@ -52,8 +52,6 @@ Set these in Render's environment:
 | `DB_URL` | Your existing Neon connection string, kept secret |
 | `CLERK_SECRET_KEY` | Secret for the same Clerk instance as the frontend |
 | `FRONTEND_URL` | Exact V3 Cloudflare HTTPS origin, no trailing path; replace after Cloudflare supplies the final URL |
-| `WHATSAPP_NUMBER` | Your private WhatsApp number (international digits only) |
-| `CREDIT_PRICE_MYR` | `1.00` |
 | `IMPORT_PROCESSOR_ENABLED` | `true` |
 
 Use the expected V3 frontend origin for the initial deploy, then correct it when
@@ -82,8 +80,8 @@ has been created.
 ### Search index update for an existing V3 database
 
 Normal search uses six individual GIN indexes; Search Builder shares the
-name/address GINs. Every clue requires at least three
-characters. Contains/ends-with also require three consecutive letters/digits.
+name/address GINs. Every clue requires at least one
+character. Search Builder accepts five names and five addresses, ten total.
 Free previews still search address only.
 
 The selected storage trade-off is six GIN indexes without the two extra prefix
@@ -157,15 +155,14 @@ uploaded again after a restart; previously committed records stay in Neon.
 
 Sign in, load the profile, perform a public-preview search, assign a test credit
 as Admin, and run a full search. Confirm an empty search does not deduct, paging
-does not deduct again, and a refresh resets the paid view. Check the WhatsApp
-message and a small import as well. Admin searches remain free.
+does not deduct again, and a refresh resets the paid view. Check a small import as well. Admin searches remain free.
 
 Neon can remain the existing database by the owner's choice; deploying does not
 require rerunning `schema.sql` or deleting data. Separate hosting does not isolate
 V2/V3 data while both point at that database. Imports run inside the Render API;
 local upload chunks can be lost on restart/redeploy, so use the supported private
 bucket setting when durable queued imports are required. Imported records remain
-in Neon. The diagrams in `docs/` describe V3's credit and WhatsApp architecture.
+in Neon. Credits are assigned privately through user management; there is no purchase page.
 
 ### Deployment troubleshooting
 
