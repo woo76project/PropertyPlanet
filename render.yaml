@@ -18,7 +18,3 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
-      - key: WHATSAPP_NUMBER
-        sync: false
-      - key: CREDIT_PRICE_MYR
-        value: "1.00"
