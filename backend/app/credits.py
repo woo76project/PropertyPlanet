@@ -1,4 +1,3 @@
-from urllib.parse import urlencode
 from uuid import UUID
 from typing import Literal
 
@@ -35,24 +34,14 @@ def balance_for(connection, user_id):
     return row["balance"] if row else 0
 
 
-def purchase_url(settings, user):
-    if not settings.whatsapp_number:
-        return None
-    message = ("Hi, I would like to purchase search credits for Property Planets.\n"
-               f"Username: {user.get('username') or 'Not set'}\n"
-               "Please share the payment instructions. Thank you.")
-    return f"https://wa.me/{settings.whatsapp_number}?{urlencode({'text': message})}"
-
-
 @router.get("/credits")
 def my_credits(user: dict = Depends(require_complete_profile)):
     settings = get_settings()
     if user["role"] == "Admin":
-        return {"balance": 0, "unlimited": True, "price_myr": str(settings.credit_price_myr), "purchase_url": None}
+        return {"balance": 0, "unlimited": True}
     with psycopg.connect(settings.db_url.get_secret_value(), row_factory=dict_row, connect_timeout=15) as connection:
         balance = balance_for(connection, user["id"])
-    return {"balance": balance, "unlimited": user["role"] == "Admin",
-            "price_myr": str(settings.credit_price_myr), "purchase_url": purchase_url(settings, user)}
+    return {"balance": balance, "unlimited": False}
 
 
 @router.get("/admin/users/{user_id}/credits")
