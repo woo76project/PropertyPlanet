@@ -1,10 +1,8 @@
 from functools import lru_cache
-from decimal import Decimal
-import re
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,21 +12,9 @@ class Settings(BaseSettings):
     db_url: SecretStr #prevent accidental exposure of sensitive information in logs or error messages.
     clerk_secret_key: SecretStr | None = None
     frontend_url: str = "http://localhost:3000"
-    whatsapp_number: str | None = None
-    credit_price_myr: Decimal = Field(default=Decimal("1.00"), gt=0, decimal_places=2)
     import_storage_dir: Path = Path(__file__).resolve().parents[2] / ".import_uploads"
     import_storage_bucket: str | None = None
     import_processor_enabled: bool = False
-
-    @field_validator("whatsapp_number")
-    @classmethod
-    def validate_whatsapp_number(cls, value):
-        if value is None or not value.strip():
-            return None
-        value = value.strip()
-        if not re.fullmatch(r"[1-9][0-9]{6,14}", value):
-            raise ValueError("WHATSAPP_NUMBER needs international digits including country code, without + or spaces")
-        return value
 
     @field_validator("frontend_url")
     @classmethod
