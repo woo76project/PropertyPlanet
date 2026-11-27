@@ -30,13 +30,8 @@ export class PropertyApiError extends Error {
   constructor(status: number, message: string) { super(message); this.status = status; }
 }
 
-export function searchClueError(value: string, operator: SearchCondition["operator"] = "contains"): string | null {
-  const clue = value.trim();
-  if ([...clue].length < 3) return "Enter at least three characters for each search clue.";
-  if (["contains", "ends_with"].includes(operator) && !/[\p{L}\p{N}]{3}/u.test(clue)) {
-    return "Contains and ends with need at least three consecutive letters or digits.";
-  }
-  return null;
+export function searchClueError(value: string): string | null {
+  return value.trim().length < 1 ? "Enter at least one character for each search clue." : null;
 }
 
 async function apiGet(token: string, path: string, signal?: AbortSignal, method = "GET", body?: unknown) {
@@ -95,9 +90,12 @@ function readPage(data: unknown, fullAccess: boolean): PropertyPage {
 }
 
 export async function loadPropertyPage(token: string, query: PropertyQuery, signal?: AbortSignal, adminOnly = false): Promise<PropertyPageResult> {
+  if (query.builder && (query.builder.conditions.length > 10 || ["owner_name", "address"].some((field) => query.builder!.conditions.filter((row) => row.field === field).length > 5))) {
+    throw new PropertyApiError(422, "Use up to ten conditions total and five per category.");
+  }
   const clues = [
     ...(query.search.trim() ? [searchClueError(query.search)] : []),
-    ...(query.builder?.conditions.map((row) => searchClueError(row.value, row.operator)) ?? []),
+    ...(query.builder?.conditions.map((row) => searchClueError(row.value)) ?? []),
   ];
   const invalidClue = clues.find((error) => error !== null);
   if (invalidClue) throw new PropertyApiError(422, invalidClue);
@@ -113,7 +111,6 @@ export async function loadPropertyPage(token: string, query: PropertyQuery, sign
   const credits = profile.role === "Admin" ? { balance: 0, unlimited: true } : await apiGet(token, "/credits", signal);
   if (!credits || !Number.isSafeInteger(credits.balance) || credits.balance < 0 || typeof credits.unlimited !== "boolean") throw new Error("Your credit balance could not be checked. Please try again.");
   const mode: AccessMode = profile.role === "Admin" ? "admin" : query.searchId ? "credit" : "free";
-  if (mode === "free" && query.builder?.conditions.some((row) => row.field === "owner_name")) throw new PropertyApiError(402, "Use a search credit for owner-name searches.");
   const params = new URLSearchParams({ limit: String(query.limit) });
   if (query.builder) params.set("filters", JSON.stringify(query.builder));
   if (query.search.trim()) params.set("search", query.search.trim());
